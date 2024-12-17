@@ -37,8 +37,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		responses.Erro(w, http.StatusInternalServerError, err)
 		return
 	}
-
-	responses.JSON(w, http.StatusCreated, "The user are created Successfully!")
+	
+	responses.JSON(w, http.StatusCreated, user)
 
 }
 
