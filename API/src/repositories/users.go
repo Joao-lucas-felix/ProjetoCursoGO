@@ -40,6 +40,7 @@ func (repository Users) Create(user models.User) (error) {
 	}
 	return nil
 }
+// Search returns one user by name or nick
 func (repository Users) Search(nameOrNick string) ([]models.User, error){
 	nameOrNick = fmt.Sprintf("%%%s%%", nameOrNick)
 	
@@ -61,4 +62,22 @@ func (repository Users) Search(nameOrNick string) ([]models.User, error){
 		users = append(users, user)
 	}
 	return users, nil
+}
+// FindById returns a user by the id
+func (repository Users) FindById(userId int)   (models.User, error){ 
+
+	rows, err := repository.db.Query("SELECT id, name, email, nick, created_at, updated_at FROM usuarios u WHERE id = $1", userId)
+	if err != nil{
+		return models.User{}, err 
+	}
+	defer rows.Close()
+	var user models.User
+
+	if rows.Next() {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Nick, &user.CreatedAt, &user.UpdatedAt); 
+		err != nil{
+			return models.User{}, err	
+		}
+	}
+	return user, nil
 }

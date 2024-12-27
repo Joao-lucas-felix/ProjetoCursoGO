@@ -6,6 +6,7 @@ import (
 	"github.com/Joao-lucas-felix/DevBook/API/src/controllers"
 )
 
+// UserRoutes var to define all users routes
 var UserRoutes = []Route{
 	{
 		URI:         "/users",

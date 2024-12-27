@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
@@ -12,28 +15,28 @@ import (
 	"github.com/Joao-lucas-felix/DevBook/API/src/responses"
 )
 
-// Create an user
+// CreateUser Create a user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		responses.Erro(w, http.StatusUnprocessableEntity, err)
+		responses.Error(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	var user models.User
 	if err = json.Unmarshal(requestBody, &user); err != nil {
-		responses.Erro(w, http.StatusBadRequest, err)
+		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if err = user.Preare(); err != nil {
-		responses.Erro(w, http.StatusBadRequest, err)
+	if err = user.Prepare(); err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
 
 	db, err := database.Connect()
 	if err != nil {
-		responses.Erro(w, http.StatusInternalServerError, err)
+		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 	defer db.Close()
@@ -41,7 +44,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	repository := repositories.NewUserRepository(db)
 
 	if err = repository.Create(user); err != nil {
-		responses.Erro(w, http.StatusInternalServerError, err)
+		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -49,12 +52,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Get all users
+// GetAllUser Get all users
 func GetAllUser(w http.ResponseWriter, r *http.Request) {
 	nameOrNick := strings.ToLower(r.URL.Query().Get("user"))
 	db, err := database.Connect()
 	if err != nil {
-		responses.Erro(w, http.StatusInternalServerError, err)
+		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 	defer db.Close()
@@ -62,23 +65,43 @@ func GetAllUser(w http.ResponseWriter, r *http.Request) {
 	repository := repositories.NewUserRepository(db)
 	users, err := repository.Search(nameOrNick)
 	if err != nil {
-		responses.Erro(w, http.StatusInternalServerError, err)
+		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK ,users)
+	responses.JSON(w, http.StatusOK, users)
 }
 
-// Get an user with ID
+// GetUser Get an user with ID
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Get an User"))
+	params := mux.Vars(r)
+	userId, err := strconv.Atoi(params["userID"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	user, err := repository.FindById(userId)
+	if err != nil {
+		responses.Error(w, http.StatusNotFound, err)
+	}
+
+	responses.JSON(w, http.StatusOK, user)
 }
 
-// Update an user with ID
+// UpdateUser  Update  user with ID
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Update an user"))
+	w.Write([]byte("Update a user"))
 }
 
-// Delete an user with ID
+// DeleteUser Delete a user with ID
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Delete an user"))
+	w.Write([]byte("Delete a user"))
 }

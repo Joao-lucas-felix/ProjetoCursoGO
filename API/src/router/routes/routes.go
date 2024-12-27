@@ -14,7 +14,7 @@ type Route struct {
 	RequireAuth bool
 }
 
-// Put all routes in the router
+// ConfigRoutes Put all routes in the router
 func ConfigRoutes(r *mux.Router) *mux.Router {
 	routes := UserRoutes
 
