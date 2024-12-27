@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Gerar return a new Router, with the routes configureds
+// GenRouter return a new Router, with the routes configured
 func GenRouter() *mux.Router {
 	router := routes.ConfigRoutes(mux.NewRouter())
 	return router

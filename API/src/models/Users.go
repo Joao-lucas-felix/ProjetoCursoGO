@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// User represents an user in the aplication
+// User represents a user in the aplication
 type User struct {
 	ID        uint64    `json:"id,omitempty"`
 	Name      string    `json:"name,omitempty"`
@@ -17,13 +17,13 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
-// Validates and Prepare the user to persist in the database
-func (u *User) Preare() error {
+// Prepare Validates and Prepare the user to persist in the database
+func (u *User) Prepare() error {
 	err := u.validate()
 	if err != nil {
 		return err
 	}
-	u.formatFilds()
+	u.formatFields()
 	return nil
 }
 
@@ -42,7 +42,7 @@ func (u *User) validate() error {
 	}
 	return nil
 }
-func (u *User) formatFilds() {
+func (u *User) formatFields() {
 	u.Name = strings.TrimSpace(u.Name)
 	u.Nick = strings.TrimSpace(u.Nick)
 	u.Email = strings.TrimSpace(u.Email)
