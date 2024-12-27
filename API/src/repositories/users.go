@@ -81,3 +81,18 @@ func (repository Users) FindById(userId int)   (models.User, error){
 	}
 	return user, nil
 }
+// Update updates the user in the database
+func (repository Users) Update(userId int, user models.User)   error{ 
+	statement, err := repository.db.Prepare(
+		"UPDATE usuarios SET name = $1, nick = $2, email = $3 WHERE id = $4",
+	)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	 _, err = statement.Exec(user.Name, user.Nick, user.Email, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
