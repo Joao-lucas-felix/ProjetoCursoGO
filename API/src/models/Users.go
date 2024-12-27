@@ -18,8 +18,8 @@ type User struct {
 }
 
 // Prepare Validates and Prepare the user to persist in the database
-func (u *User) Prepare() error {
-	err := u.validate()
+func (u *User) Prepare(step string) error {
+	err := u.validate(step)
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func (u *User) Prepare() error {
 	return nil
 }
 
-func (u *User) validate() error {
+func (u *User) validate(step string) error {
 	if u.Name == "" {
 		return errors.New("name is a required parameter must not be blank")
 	}
@@ -37,7 +37,7 @@ func (u *User) validate() error {
 	if u.Email == "" {
 		return errors.New("email is a required parameter must not be blank")
 	}
-	if u.Password == "" {
+	if u.Password == "" && step == "create"{
 		return errors.New("password is a required parameter must not be blank")
 	}
 	return nil
