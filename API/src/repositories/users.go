@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
 )
@@ -38,4 +39,26 @@ func (repository Users) Create(user models.User) (error) {
 		return errors.New("error while trying to create an user")
 	}
 	return nil
+}
+func (repository Users) Search(nameOrNick string) ([]models.User, error){
+	nameOrNick = fmt.Sprintf("%%%s%%", nameOrNick)
+	
+	rows, err := repository.db.Query(
+		"SELECT id, name, nick ,email, created_at, updated_at FROM usuarios u WHERE u.name LIKE $1 OR u.nick LIKE $2",
+		nameOrNick, nameOrNick,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Name,&user.Nick ,&user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

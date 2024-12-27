@@ -10,17 +10,17 @@ import (
 )
 
 var (
-	// Str of Database connection
+	//DatabaseStrConnection Str of Database connection
 	DatabaseStrConnection = ""
-	// API running port
-	Port                  = 0
+	// Port API running port
+	Port = 0
 )
 
-// LoadENV carrega as variaveis de ambiente do go
+// LoadENV load the env variables
 func LoadENV() {
 	var err error
 
-	if err = godotenv.Load(); err != nil{
+	if err = godotenv.Load(); err != nil {
 		log.Fatal("Error while trying to up the API:\n", err)
 	}
 

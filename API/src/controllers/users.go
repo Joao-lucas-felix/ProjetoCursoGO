@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
@@ -18,12 +19,18 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		responses.Erro(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	
+
 	var user models.User
-	if err = json.Unmarshal(requestBody, &user); err != nil{
+	if err = json.Unmarshal(requestBody, &user); err != nil {
 		responses.Erro(w, http.StatusBadRequest, err)
 		return
 	}
+
+	if err = user.Preare(); err != nil {
+		responses.Erro(w, http.StatusBadRequest, err)
+		return
+	}
+
 	db, err := database.Connect()
 	if err != nil {
 		responses.Erro(w, http.StatusInternalServerError, err)
@@ -33,18 +40,32 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	repository := repositories.NewUserRepository(db)
 
-	if err = repository.Create(user); err != nil{
+	if err = repository.Create(user); err != nil {
 		responses.Erro(w, http.StatusInternalServerError, err)
 		return
 	}
-	
+
 	responses.JSON(w, http.StatusCreated, user)
 
 }
 
 // Get all users
 func GetAllUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Get all users"))
+	nameOrNick := strings.ToLower(r.URL.Query().Get("user"))
+	db, err := database.Connect()
+	if err != nil {
+		responses.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	users, err := repository.Search(nameOrNick)
+	if err != nil {
+		responses.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK ,users)
 }
 
 // Get an user with ID
