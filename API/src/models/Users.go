@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Joao-lucas-felix/DevBook/API/src/security"
 	"github.com/badoux/checkmail"
 )
 
@@ -26,7 +27,9 @@ func (u *User) Prepare(step string) error {
 	if err != nil {
 		return err
 	}
-	u.formatFields()
+	if err := u.formatFields(step); err != nil{
+		return err
+	}
 	return nil
 }
 
@@ -49,8 +52,17 @@ func (u *User) validate(step string) error {
 	}
 	return nil
 }
-func (u *User) formatFields() {
+func (u *User) formatFields(step string) error {
 	u.Name = strings.TrimSpace(u.Name)
 	u.Nick = strings.TrimSpace(u.Nick)
 	u.Email = strings.TrimSpace(u.Email)
+
+	if step == "create" {
+		passwordHased, err := security.Hash(u.Password)
+		if err != nil{
+			return err
+		}
+		u.Password = string(passwordHased)
+	}
+	return nil
 }
