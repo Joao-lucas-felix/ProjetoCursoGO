@@ -2,8 +2,11 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/badoux/checkmail"
 )
 
 // User represents a user in the aplication
@@ -36,6 +39,10 @@ func (u *User) validate(step string) error {
 	}
 	if u.Email == "" {
 		return errors.New("email is a required parameter must not be blank")
+	}
+	if err := checkmail.ValidateFormat(u.Email); err != nil{
+		errorMsg := fmt.Sprintf("email is in invalid format: %s", err.Error())
+		return errors.New(errorMsg)
 	}
 	if u.Password == "" && step == "create"{
 		return errors.New("password is a required parameter must not be blank")
