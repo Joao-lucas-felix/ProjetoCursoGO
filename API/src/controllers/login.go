@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/Joao-lucas-felix/DevBook/API/src/auth"
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
 	"github.com/Joao-lucas-felix/DevBook/API/src/repositories"
@@ -40,5 +42,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusUnauthorized, err)
 		return
 	}
-	w.Write([]byte("Logado!"))
+	token, _ := auth.CreateToken(int(savedInDbUser.ID))
+	fmt.Println(token)
+	w.Write([]byte(token))
 }
