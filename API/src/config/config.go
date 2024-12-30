@@ -14,6 +14,8 @@ var (
 	DatabaseStrConnection = ""
 	// Port API running port
 	Port = 0
+	// SecretKey is the key used to signed the JWT
+	SecretKey []byte
 )
 
 // LoadENV load the env variables
@@ -34,4 +36,6 @@ func LoadENV() {
 		os.Getenv("DB_USER"), os.Getenv("DB_NAME"), os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_SSLMODE_DEFAULT"),
 	)
+
+	SecretKey = []byte(os.Getenv("SECRET_KEY"))
 }

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config.LoadENV()
-	fmt.Printf("Running in the port:%d\nDatabase connection: %s\n", config.Port, config.DatabaseStrConnection)
+	fmt.Printf("\nRunning in the port:%d\n", config.Port)
 	fmt.Println("-------Welcome to the DevBook API------")
 
 	r := router.GenRouter()
