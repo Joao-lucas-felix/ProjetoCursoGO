@@ -1,11 +1,14 @@
 package middlewares
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/Joao-lucas-felix/DevBook/API/src/auth"
+	"github.com/Joao-lucas-felix/DevBook/API/src/responses"
 )
-// logger log the request infos 
+
+// logger log the request infos
 func Logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("\n%s %s %s", r.Method, r.RequestURI, r.Host)
@@ -16,7 +19,10 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 // Auth verifies if the user in request are athenticated
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Validate the token")
+		if err := auth.ValidateToken(r); err != nil {
+			responses.Error(w, http.StatusUnauthorized, err)
+			return
+		}
 		next(w, r)
 	}
 }
