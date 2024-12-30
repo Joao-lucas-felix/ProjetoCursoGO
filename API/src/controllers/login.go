@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -37,12 +36,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	savedInDbUser, err := repository.FindByEmail(user.Email)
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
+		return
 	}
 	if err := security.VerifyPassword(user.Password, savedInDbUser.Password); err != nil {
 		responses.Error(w, http.StatusUnauthorized, err)
 		return
 	}
-	token, _ := auth.CreateToken(int(savedInDbUser.ID))
-	fmt.Println(token)
+	token, err := auth.CreateToken(int(savedInDbUser.ID))
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
 	w.Write([]byte(token))
 }
