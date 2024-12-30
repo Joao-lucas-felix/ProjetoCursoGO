@@ -1,6 +1,6 @@
 module github.com/Joao-lucas-felix/DevBook/API
 
-go 1.18
+go 1.23.4
 
 replace github.com/Joao-lucas-felix/DevBook/API/src/controllers => ./src/controllers
 

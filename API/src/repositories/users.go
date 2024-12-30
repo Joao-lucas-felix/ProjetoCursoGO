@@ -108,3 +108,19 @@ func (repository Users) Delete(userId int) error {
 	}
 	return nil
 }
+// Find by email finds a user by email and returns the user Id and the password hash  
+func (repository Users) FindByEmail(email string) (models.User, error){
+	row, err := repository.db.Query("SELECT id, password_hash FROM usuarios u WHERE u.email = $1", email)
+	if err != nil {
+		return models.User{}, err
+	}
+	defer row.Close()
+
+	var user models.User
+	if row.Next() {
+		if err := row.Scan(&user.ID, &user.Password); err != nil{
+			return models.User{}, err
+		}
+	}
+	return user, nil
+}
