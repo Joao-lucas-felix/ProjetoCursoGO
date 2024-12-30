@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/Joao-lucas-felix/DevBook/API/src/auth"
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
 	"github.com/Joao-lucas-felix/DevBook/API/src/repositories"
@@ -104,7 +107,18 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
+	userRequestId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
 
+	if userRequestId != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("forbiden to update anoter user"))
+		return
+	}
+
+	fmt.Println(userRequestId)
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		responses.Error(w, http.StatusUnprocessableEntity, err)
@@ -145,6 +159,18 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	userRequestId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if userRequestId != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("forbiden to delete anoter user"))
+		return
+	}
+
 	db, err := database.Connect()
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
