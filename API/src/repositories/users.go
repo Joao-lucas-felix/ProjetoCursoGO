@@ -124,3 +124,17 @@ func (repository Users) FindByEmail(email string) (models.User, error){
 	}
 	return user, nil
 }
+// FollowUser adds the follow relation in the databse
+func (repository Users) FollowUser(userId, followerId int) error {
+	statement, err := repository.db.Prepare("insert into seguidores (usuario_id, seguidor_id) values ($1,$2);")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	
+	if _, err := statement.Exec(followerId, userId); err != nil {
+		return err
+	}
+
+	return nil
+}
