@@ -155,7 +155,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := strconv.Atoi(params["userID"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -179,9 +179,91 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repository := repositories.NewUserRepository(db)
-	if err := repository.Delete(userId); err != nil{
+	if err := repository.Delete(userId); err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 	responses.JSON(w, http.StatusOK, "The User are deleted Successfuly")
+}
+
+// FollowUser thats function is used to start to following another user
+func FollowUser(w http.ResponseWriter, r *http.Request) {
+	followerId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	userId, err := strconv.Atoi(parameters["userID"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	if userId == followerId {
+		responses.Error(w, http.StatusForbidden, errors.New("you can not follow yourself"))
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	if err := repository.FollowUser(userId, followerId); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK,
+		struct{
+			Message string
+		}{
+			Message: "You started to follow the user sucessfully",
+		},
+	)
+
+}
+
+// FollowUser thats function is used to unfollow a user
+func UnfollowUser(w http.ResponseWriter, r *http.Request) {
+	followerId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	userId, err := strconv.Atoi(parameters["userID"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	if userId == followerId {
+		responses.Error(w, http.StatusForbidden, errors.New("you can not unfollow yourself"))
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	if err := repository.UnfollowUser(userId, followerId); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK,
+		struct{
+			Message string
+		}{
+			Message: "You unfollow the user sucessfully",
+		},
+	)
+
 }
