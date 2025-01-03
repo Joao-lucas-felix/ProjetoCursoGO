@@ -30,7 +30,8 @@ func (repository Post) CreatePost(userId int, post models.Post) error {
 
 	return nil
 }
-// FindById find the post with the ID - X in the database 
+
+// FindById find the post with the ID - X in the database
 func (repository Post) FindById(postId int64) (models.Post, error) {
 	rows, err := repository.db.Query(`
 				select p.id, p.title, p.content, u.id, u.nick, p.likes, p.created_at 
@@ -42,7 +43,7 @@ func (repository Post) FindById(postId int64) (models.Post, error) {
 	}
 	defer rows.Close()
 	var post models.Post
-	if rows.Next(){
+	if rows.Next() {
 		if err := rows.Scan(
 			&post.Id,
 			&post.Title,
@@ -51,9 +52,42 @@ func (repository Post) FindById(postId int64) (models.Post, error) {
 			&post.AuthorNick,
 			&post.Likes,
 			&post.CreatedAt,
-		); err != nil{
+		); err != nil {
 			return models.Post{}, err
 		}
 	}
 	return post, nil
+}
+
+// FindAll find all posts based in the users that the user in request followings and returns the user posts
+func (repository Post) FindAll(userId int) ([]models.Post, error) {
+	rows, err := repository.db.Query(`
+		SELECT DISTINCT p.id, p.title, p.content, u.id, u.nick, p.likes, p.created_at 
+		FROM post p JOIN seguidores s  on p.author_id = s.usuario_id
+		JOIN usuarios u ON p.author_id = u.id
+		WHERE seguidor_id = $1 OR u.id = $2
+		order by p.created_at desc;
+	`, userId, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(
+			&post.Id,
+			&post.Title,
+			&post.Content,
+			&post.AuthorId,
+			&post.AuthorNick,
+			&post.Likes,
+			&post.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
 }

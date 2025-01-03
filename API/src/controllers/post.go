@@ -67,7 +67,25 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // GetAllPost is the endpoint to get posts
 func GetAllPosts(w http.ResponseWriter, r *http.Request) {
-	
+	userId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	posts, err := repository.FindAll(userId)
+	if err != nil{
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, posts)
 }
 
 // GetPostById is the enpoint to get a  post by id
