@@ -35,12 +35,17 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
+	defer db.Close()
 
 	if err := json.Unmarshal(requestBody, &post); err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
-	defer db.Close()
+
+	if err := post.Prepare(); err != nil{
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
 	repository := repositories.NewPostRepository(db)
 	if err := repository.CreatePost(userId, post); err != nil {
