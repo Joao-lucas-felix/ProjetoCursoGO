@@ -53,3 +53,15 @@ INSERT INTO seguidores (usuario_id, seguidor_id) VALUES
     (1,2),
     (1,3),
     (3,1);
+
+CREATE TABLE post(
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(50) NOT NULL,
+    content VARCHAR(600) NOT NULL, 
+    author_id int not NULL,
+    FOREIGN KEY (author_id)
+    REFERENCES usuarios(id)
+    ON DELETE CASCADE,
+    likes int DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
