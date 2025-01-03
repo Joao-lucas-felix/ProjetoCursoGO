@@ -214,3 +214,34 @@ func (repository Users) GetFollowing(userId int) ([]models.User, error) {
 
 	return followers, nil
 }
+
+func (repository Users) GetPasswordById(userId int) (string, error) {
+	rows, err := repository.db.Query(`
+		select u.password_hash from usuarios u where u.id = $1
+	`,userId)
+	if err != nil {
+		return "", err
+	}
+	var user models.User
+	if rows.Next() {	
+		if err := rows.Scan(&user.Password); err != nil{
+			return "", err
+		}
+	}
+	return user.Password, nil
+}
+// UpdatePassword update the user passwrod in the db 
+func (repository Users) UpdatePassword(userId int, passwordHash string) error {
+	statement, err := repository.db.Prepare(`
+		update usuarios set password_hash = $1 where id = $2
+	`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err := statement.Exec(passwordHash, userId); err != nil {
+		return err
+	}
+	return nil
+}

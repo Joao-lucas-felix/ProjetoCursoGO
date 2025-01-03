@@ -16,6 +16,7 @@ import (
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
 	"github.com/Joao-lucas-felix/DevBook/API/src/repositories"
 	"github.com/Joao-lucas-felix/DevBook/API/src/responses"
+	"github.com/Joao-lucas-felix/DevBook/API/src/security"
 )
 
 // CreateUser Create a user
@@ -314,4 +315,68 @@ func GetFollowings(w http.ResponseWriter, r *http.Request) {
 	}
 	responses.JSON(w, http.StatusOK, followers)
 
+}
+// RedifinePassword is the endpoint to redifine a user password
+func RedifinePassword(w http.ResponseWriter, r *http.Request) {
+	userIdInToken, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	userId, err := strconv.Atoi(parameters["userID"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	if userIdInToken != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("impossible to update anoter user"))
+		return
+	}
+	requestBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	var password models.Password
+	if err := json.Unmarshal(requestBody, &password); err != nil{
+		responses.Error(w, http.StatusBadRequest, err)
+		return	
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUserRepository(db)
+	passwordSavedInDb, err := repository.GetPasswordById(userId)
+	if err != nil{
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if err := security.VerifyPassword(password.Password, passwordSavedInDb); err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	newPasswordHash, err := security.Hash(password.NewPassword)
+	if err != nil{
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := repository.UpdatePassword(userId, string(newPasswordHash)); err != nil{
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	
+	responses.JSON(w, http.StatusOK,
+		struct{
+			Message string
+		}{
+			Message: "You password are updated sucessfully",
+		},
+	)
 }

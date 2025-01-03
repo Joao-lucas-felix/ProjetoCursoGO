@@ -62,4 +62,10 @@ var UserRoutes = []Route{
 		Func:        controllers.GetFollowings,
 		RequireAuth: true,
 	},
+	{
+		URI:         "/users/{userID}/redifine-password",
+		Metodo:      http.MethodPost,
+		Func:        controllers.RedifinePassword,
+		RequireAuth: true,
+	},
 }
