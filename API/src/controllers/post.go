@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/Joao-lucas-felix/DevBook/API/src/auth"
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
 	"github.com/Joao-lucas-felix/DevBook/API/src/models"
 	"github.com/Joao-lucas-felix/DevBook/API/src/repositories"
 	"github.com/Joao-lucas-felix/DevBook/API/src/responses"
+	"github.com/gorilla/mux"
 )
 
 // CreatePost is the endpoint to create a new post
@@ -65,11 +67,32 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // GetAllPost is the endpoint to get posts
 func GetAllPosts(w http.ResponseWriter, r *http.Request) {
-
+	
 }
 
 // GetPostById is the enpoint to get a  post by id
 func GetPostById(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil{
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	post, err :=  repository.FindById(int64(postId))
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, post)
 
 }
 

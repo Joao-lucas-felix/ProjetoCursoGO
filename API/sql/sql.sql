@@ -65,3 +65,9 @@ CREATE TABLE post(
     likes int DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+INSERT INTO post (title, content, author_id) VALUES 
+    ('Post User 1','Post User 1',1),
+    ('Post User 2','Post User 2',2),
+    ('Post User 3','Post User 3',3);
+    
