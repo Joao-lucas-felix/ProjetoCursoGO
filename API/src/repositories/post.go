@@ -150,3 +150,17 @@ func (repository Post) FindPostsByUser(userId int) ([]models.Post, error) {
 	}
 	return posts, nil
 }
+// LikePost adds a like to a post by id 
+func (repository Post) LikePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		update post set likes = likes + 1 where id = $1
+	`)
+	if err != nil{
+		return err
+	}
+	defer statement.Close()
+	if _,err := statement.Exec(postId); err != nil{
+		return err
+	}
+	return nil
+}

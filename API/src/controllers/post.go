@@ -45,7 +45,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := post.Prepare(); err != nil{
+	if err := post.Prepare(); err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -82,7 +82,7 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	repository := repositories.NewPostRepository(db)
 	posts, err := repository.FindAll(userId)
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -93,7 +93,7 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 func GetPostById(w http.ResponseWriter, r *http.Request) {
 	parameters := mux.Vars(r)
 	postId, err := strconv.Atoi(parameters["postId"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -105,7 +105,7 @@ func GetPostById(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repository := repositories.NewPostRepository(db)
-	post, err :=  repository.FindById(int64(postId))
+	post, err := repository.FindById(int64(postId))
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
@@ -124,7 +124,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	parameters := mux.Vars(r)
 	postId, err := strconv.Atoi(parameters["postId"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -157,7 +157,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	if err := post.Prepare(); err != nil{
+	if err := post.Prepare(); err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -185,7 +185,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 	parameters := mux.Vars(r)
 	postId, err := strconv.Atoi(parameters["postId"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -220,11 +220,12 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
-// GetUserPosts is the endpoint that returns all posts of a specific user 
+
+// GetUserPosts is the endpoint that returns all posts of a specific user
 func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	parameters := mux.Vars(r)
 	userId, err := strconv.Atoi(parameters["userId"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -236,10 +237,38 @@ func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	repository := repositories.NewPostRepository(db)
 	posts, err := repository.FindPostsByUser(userId)
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 	responses.JSON(w, http.StatusOK, posts)
 }
 
+func LikePost(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	if err := repository.LikePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Like the Post sucessfully",
+		},
+	)
+
+}
