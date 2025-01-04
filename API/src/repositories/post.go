@@ -105,3 +105,17 @@ func (repository Post) UpdatePost(postId int64, post models.Post) error {
 	}
 	return nil
 }
+// DeletePost delete a post of an user
+func (repository Post) DeletePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		delete from post where id = $1
+	`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	if _, err := statement.Exec(postId); err != nil {
+		return err
+	} 
+	return nil
+}

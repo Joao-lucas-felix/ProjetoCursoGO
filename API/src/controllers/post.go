@@ -178,5 +178,45 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 // DeletePost is the endpoint to delete a post
 func DeletePost(w http.ResponseWriter, r *http.Request) {
+	userId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil{
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	postInDatabe, err := repository.FindById(int64(postId))
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if postInDatabe.AuthorId != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("you can not delete a post of anoter user"))
+		return
+	}
+	if err := repository.DeletePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Post are Deleted sucessfully",
+		},
+	)
 }
