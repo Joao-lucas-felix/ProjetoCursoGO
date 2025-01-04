@@ -91,3 +91,17 @@ func (repository Post) FindAll(userId int) ([]models.Post, error) {
 	}
 	return posts, nil
 }
+// UpdatePost update a tile and content of a post 
+func (repository Post) UpdatePost(postId int64, post models.Post) error {
+	statement, err := repository.db.Prepare(`
+		update post set title = $1, content = $2 where id = $3
+	`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	if _, err := statement.Exec(post.Title, post.Content, postId); err != nil {
+		return err
+	}
+	return nil
+}
