@@ -244,6 +244,7 @@ func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, posts)
 }
 
+// LikePost adds a like to a post 
 func LikePost(w http.ResponseWriter, r *http.Request) {
 	parameters := mux.Vars(r)
 	postId, err := strconv.Atoi(parameters["postId"])
@@ -268,6 +269,36 @@ func LikePost(w http.ResponseWriter, r *http.Request) {
 			Message string
 		}{
 			Message: "Your Like the Post sucessfully",
+		},
+	)
+
+}
+
+// UnlikePost remove one like of a post
+func UnlikePost(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	if err := repository.UnlikePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Unliked the Post sucessfully",
 		},
 	)
 

@@ -164,3 +164,21 @@ func (repository Post) LikePost(postId int64) error {
 	}
 	return nil
 }
+
+// UnlikePosts remove one like of a post by id 
+func (repository Post) UnlikePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		update post set likes = 
+		CASE WHEN  likes > 0 THEN likes - 1
+		ELSE 0 END
+		where id = $1
+	`)
+	if err != nil{
+		return err
+	}
+	defer statement.Close()
+	if _,err := statement.Exec(postId); err != nil{
+		return err
+	}
+	return nil
+}
