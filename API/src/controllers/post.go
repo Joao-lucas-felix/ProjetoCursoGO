@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -44,7 +45,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := post.Prepare(); err != nil{
+	if err := post.Prepare(); err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -81,7 +82,7 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	repository := repositories.NewPostRepository(db)
 	posts, err := repository.FindAll(userId)
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -92,7 +93,7 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 func GetPostById(w http.ResponseWriter, r *http.Request) {
 	parameters := mux.Vars(r)
 	postId, err := strconv.Atoi(parameters["postId"])
-	if err != nil{
+	if err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -104,7 +105,7 @@ func GetPostById(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repository := repositories.NewPostRepository(db)
-	post, err :=  repository.FindById(int64(postId))
+	post, err := repository.FindById(int64(postId))
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
@@ -116,10 +117,189 @@ func GetPostById(w http.ResponseWriter, r *http.Request) {
 
 // UpdatePost is the endpoint to update a post
 func UpdatePost(w http.ResponseWriter, r *http.Request) {
+	userId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	postInDatabe, err := repository.FindById(int64(postId))
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if postInDatabe.AuthorId != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("you can not edit a post of anoter user"))
+		return
+	}
+
+	requestBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	var post models.Post
+	if err := json.Unmarshal(requestBody, &post); err != nil {
+		responses.Error(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	if err := post.Prepare(); err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err := repository.UpdatePost(int64(postId), post); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Post are Updated sucessfully",
+		},
+	)
 }
 
 // DeletePost is the endpoint to delete a post
 func DeletePost(w http.ResponseWriter, r *http.Request) {
+	userId, err := auth.ExtractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	postInDatabe, err := repository.FindById(int64(postId))
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if postInDatabe.AuthorId != userId {
+		responses.Error(w, http.StatusForbidden, errors.New("you can not delete a post of anoter user"))
+		return
+	}
+	if err := repository.DeletePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Post are Deleted sucessfully",
+		},
+	)
+}
+
+// GetUserPosts is the endpoint that returns all posts of a specific user
+func GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	userId, err := strconv.Atoi(parameters["userId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+	repository := repositories.NewPostRepository(db)
+	posts, err := repository.FindPostsByUser(userId)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, posts)
+}
+
+// LikePost adds a like to a post 
+func LikePost(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	if err := repository.LikePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Like the Post sucessfully",
+		},
+	)
+
+}
+
+// UnlikePost remove one like of a post
+func UnlikePost(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+	postId, err := strconv.Atoi(parameters["postId"])
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewPostRepository(db)
+	if err := repository.UnlikePost(int64(postId)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK,
+		struct {
+			Message string
+		}{
+			Message: "Your Unliked the Post sucessfully",
+		},
+	)
 
 }

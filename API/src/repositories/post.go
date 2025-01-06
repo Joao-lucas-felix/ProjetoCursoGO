@@ -91,3 +91,94 @@ func (repository Post) FindAll(userId int) ([]models.Post, error) {
 	}
 	return posts, nil
 }
+// UpdatePost update a tile and content of a post 
+func (repository Post) UpdatePost(postId int64, post models.Post) error {
+	statement, err := repository.db.Prepare(`
+		update post set title = $1, content = $2 where id = $3
+	`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	if _, err := statement.Exec(post.Title, post.Content, postId); err != nil {
+		return err
+	}
+	return nil
+}
+// DeletePost delete a post of an user
+func (repository Post) DeletePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		delete from post where id = $1
+	`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	if _, err := statement.Exec(postId); err != nil {
+		return err
+	} 
+	return nil
+}
+// FindPostsByUser find all posts of a user
+func (repository Post) FindPostsByUser(userId int) ([]models.Post, error) {
+	rows, err := repository.db.Query(`
+		SELECT DISTINCT p.id, p.title, p.content, u.id, u.nick, p.likes, p.created_at 
+		FROM post p JOIN usuarios u ON p.author_id = u.id
+		WHERE p.author_id = $1
+		order by p.created_at desc;
+	`, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(
+			&post.Id,
+			&post.Title,
+			&post.Content,
+			&post.AuthorId,
+			&post.AuthorNick,
+			&post.Likes,
+			&post.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+// LikePost adds a like to a post by id 
+func (repository Post) LikePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		update post set likes = likes + 1 where id = $1
+	`)
+	if err != nil{
+		return err
+	}
+	defer statement.Close()
+	if _,err := statement.Exec(postId); err != nil{
+		return err
+	}
+	return nil
+}
+
+// UnlikePosts remove one like of a post by id 
+func (repository Post) UnlikePost(postId int64) error {
+	statement, err := repository.db.Prepare(`
+		update post set likes = 
+		CASE WHEN  likes > 0 THEN likes - 1
+		ELSE 0 END
+		where id = $1
+	`)
+	if err != nil{
+		return err
+	}
+	defer statement.Close()
+	if _,err := statement.Exec(postId); err != nil{
+		return err
+	}
+	return nil
+}

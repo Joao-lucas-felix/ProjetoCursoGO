@@ -8,33 +8,51 @@ import (
 
 var PostRoutes = []Route{
 	{
-		URI: "/post",
+		URI: "/posts",
 		Metodo: http.MethodPost,
 		Func: controllers.CreatePost,
 		RequireAuth: true,
 	},
 	{
-		URI: "/post",
+		URI: "/posts",
 		Metodo: http.MethodGet,
 		Func: controllers.GetAllPosts,
 		RequireAuth: true,
 	},
 	{
-		URI: "/post/{postId}",
+		URI: "/posts/{postId}",
 		Metodo: http.MethodGet,
 		Func: controllers.GetPostById,
 		RequireAuth: true,
 	},
 	{
-		URI: "/post/{postId}",
+		URI: "/posts/{postId}",
 		Metodo: http.MethodPut,
 		Func: controllers.UpdatePost,
 		RequireAuth: true,
 	},
 	{
-		URI: "/post/{postId}",
+		URI: "/posts/{postId}",
 		Metodo: http.MethodDelete,
 		Func: controllers.DeletePost,
+		RequireAuth: true,
+	},
+	{
+		URI: "/users/{userId}/posts",
+		Metodo: http.MethodGet,
+		Func: controllers.GetUserPosts,
+		RequireAuth: true,
+	},
+	{
+		URI: "/posts/{postId}/like",
+		Metodo: http.MethodPost,
+		Func: controllers.LikePost,
+		RequireAuth: true,
+	},
+	{
+		URI: "/posts/{postId}/unlike",
+		Metodo: http.MethodPost,
+		Func: controllers.UnlikePost,
 		RequireAuth: true,
 	},
 }	
