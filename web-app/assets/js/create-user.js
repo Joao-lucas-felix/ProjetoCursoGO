@@ -1,7 +1,6 @@
 $('#form-create-user').on('submit', createUser);
 function createUser(event){
     event.preventDefault();
-    console.log('createUser')
 
     if ($('#password').val() != $('#confirm-password').val()){
         alert('The passwords are wrong!')
@@ -13,11 +12,17 @@ function createUser(event){
             url: '/users',
             method: 'POST',
             data:{
-                name: $('name').val(),
-                email: $('email').val(),
-                nick:  $('nick').val(),
-                password: $('password').val(),
+                name: $('#name').val(),
+                email: $('#email').val(),
+                nick:  $('#nick').val(),
+                password: $('#password').val(),
             }
         }
-    )
+    ).done(() => {
+        alert('User created')
+    }).fail((error) => {
+        console.log(error);
+        
+        alert('Operation fail')
+    })
 }
