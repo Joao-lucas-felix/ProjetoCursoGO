@@ -3,18 +3,16 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-	"log"
 	"net/http"
 	"web-app/src/models"
 	"web-app/src/responses"
 )
 
 // Login uses the email and password to get the token in the API
-func Login(w http.ResponseWriter, r *http.Request) {	
+func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	user, err := json.Marshal(map[string]string{
-		"email": r.FormValue("email"),
+		"email":    r.FormValue("email"),
 		"password": r.FormValue("password"),
 	})
 	if err != nil {
@@ -33,13 +31,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.ErrorCode(w, response)
 	}
 
-	var authData models.AuthDatas 
+	var authData models.AuthDatas
 
 	if err := json.NewDecoder(response.Body).Decode(&authData); err != nil {
 		responses.JSON(w, http.StatusUnprocessableEntity, responses.ErrorAPI{Error: err.Error()})
 		return
 	}
-
 
 	responses.JSON(w, http.StatusOK, nil)
 }
