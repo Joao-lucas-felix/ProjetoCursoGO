@@ -38,5 +38,4 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.JSON(w, response.StatusCode, nil)
-	return
 }

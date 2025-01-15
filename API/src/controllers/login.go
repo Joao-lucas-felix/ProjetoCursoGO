@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/Joao-lucas-felix/DevBook/API/src/auth"
 	"github.com/Joao-lucas-felix/DevBook/API/src/database"
@@ -47,5 +48,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.Error(w, http.StatusInternalServerError, err)
 		return
 	}
-	w.Write([]byte(token))
+	userId := strconv.FormatUint(savedInDbUser.ID, 10)
+
+	responses.JSON(w, http.StatusOK, 
+		models.AuthDatas{
+		ID: userId,
+		Token: token,
+	})
 }
