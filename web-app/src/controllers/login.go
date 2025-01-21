@@ -3,7 +3,10 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"web-app/src/config"
+	"web-app/src/cookies"
 	"web-app/src/models"
 	"web-app/src/responses"
 )
@@ -20,7 +23,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := http.Post("http://localhost:5000/login", "application/json", bytes.NewBuffer(user))
+	url := fmt.Sprintf("%s/login", config.APIURL)
+	response, err := http.Post(url, "application/json", bytes.NewBuffer(user))
 	if err != nil {
 		responses.JSON(w, http.StatusInternalServerError, responses.ErrorAPI{Error: err.Error()})
 		return
@@ -37,6 +41,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.JSON(w, http.StatusUnprocessableEntity, responses.ErrorAPI{Error: err.Error()})
 		return
 	}
-
+	if err := cookies.Save(w, authData.ID, authData.Token ); err != nil{
+		responses.JSON(w, http.StatusUnprocessableEntity, responses.ErrorAPI{Error: err.Error()})
+		return
+	}
 	responses.JSON(w, http.StatusOK, nil)
 }
